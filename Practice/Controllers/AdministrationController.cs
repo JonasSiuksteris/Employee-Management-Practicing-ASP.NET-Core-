@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using Practice.ViewModels;
 
 namespace Practice.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdministrationController : Controller
     {
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -20,6 +22,13 @@ namespace Practice.Controllers
         {
             _roleManager = roleManager;
             _userManager = userManager;
+        }
+
+        [HttpGet]
+        public IActionResult ListUsers()
+        {
+            var user = _userManager.Users;
+            return View(user);
         }
 
         [HttpGet]
@@ -173,8 +182,7 @@ namespace Practice.Controllers
             {
                 var user = await _userManager.FindByIdAsync(model[i].UserId);
 
-                IdentityResult result = null;
-
+                IdentityResult result;
                 if (model[i].IsSelected && !await _userManager.IsInRoleAsync(user, role.Name))
                 {
                     result = await _userManager.AddToRoleAsync(user, role.Name);

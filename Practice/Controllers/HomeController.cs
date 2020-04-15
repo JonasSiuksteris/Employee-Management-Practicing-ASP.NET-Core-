@@ -14,15 +14,12 @@ namespace Practice.Controllers
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly ILogger _logger;
 
         public HomeController(IEmployeeRepository employeeRepository,
-            IWebHostEnvironment webHostEnvironment,
-            ILogger<HomeController> logger )
+            IWebHostEnvironment webHostEnvironment)
         {
             _employeeRepository = employeeRepository;
             _webHostEnvironment = webHostEnvironment;
-            _logger = logger;
         }
 
         [AllowAnonymous]
