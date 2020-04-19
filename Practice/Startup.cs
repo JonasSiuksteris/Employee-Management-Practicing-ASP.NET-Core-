@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -43,10 +44,21 @@ namespace Practice
                 options.Filters.Add(new AuthorizeFilter(policy));
             });
 
-            services.AddAuthorization(option =>
+            services.ConfigureApplicationCookie(option =>
+            {
+                option.AccessDeniedPath = new PathString("/Administration/AccessDenied");
+            });
+
+        services.AddAuthorization(option =>
             {
                 option.AddPolicy("DeleteRolePolicy",
                     policy => policy.RequireClaim("Delete Role"));
+
+                option.AddPolicy("EditRolePolicy",
+                    policy => policy.RequireClaim("Edit Role"));
+
+                option.AddPolicy("AdminRolePolicy",
+                    policy => policy.RequireRole("Admin"));
             });
 
             services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
