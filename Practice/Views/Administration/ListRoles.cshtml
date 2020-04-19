@@ -13,21 +13,34 @@
         Add new role
     </a>
 
-    foreach (var identityRole in Model)
+    foreach (var role in Model)
     {
         <div class="card mb-3">
             <div class="card-header">
-                Role Id : @identityRole.Id
+                Role Id : @role.Id
             </div>
             <div class="card-body">
-                <h5 class="card-title">@identityRole.Name</h5>
+                <h5 class="card-title">@role.Name</h5>
             </div>
             <div class="card-footer">
-                <a class="btn btn-primary" asp-action="EditRole"
-                   asp-controller="Administration" asp-route-id="@identityRole.Id">
-                    Edit
-                </a>
-                <a href="#" class="btn btn-danger">Delete</a>
+                <form method="post" asp-action="DeleteRole" asp-route-id="@role.Id">
+
+                    <a class="btn btn-primary" asp-action="EditRole"
+                       asp-controller="Administration" asp-route-id="@role.Id">
+                        Edit
+                    </a>
+                    <span id="confirmDeleteSpan_@role.Id" style="display: none">
+                        <span>Are you sure you want to delete?</span>
+                        <button type="submit" class="btn btn-danger">Yes</button>
+                        <span class="btn btn-primary"
+                              onclick="confirmDelete('@role.Id', false)">No</span>
+                    </span>
+
+                    <span id="deleteSpan_@role.Id">
+                        <span class="btn btn-danger"
+                              onclick="confirmDelete('@role.Id', true)">Delete</span>
+                    </span>
+                </form>
             </div>
         </div>
     }
@@ -48,4 +61,8 @@ else
             </a>
         </div>
     </div>
+}
+
+@section Scripts {
+    <script src="~/js/CustomScript.js"></script>
 }

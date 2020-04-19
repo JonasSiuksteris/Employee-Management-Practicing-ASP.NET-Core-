@@ -3,10 +3,10 @@
     var confirmDeleteSpan = "confirmDeleteSpan_" + uniqueId;
 
     if (isDeleteClicked) {
-        $('#' + deleteSpan).hide();
-        $('#' + confirmDeleteSpan).show();
+        $("#" + deleteSpan).hide();
+        $("#" + confirmDeleteSpan).show();
     } else {
-        $('#' + deleteSpan).show();
-        $('#' + confirmDeleteSpan).hide();
+        $("#" + deleteSpan).show();
+        $("#" + confirmDeleteSpan).hide();
     }
 }

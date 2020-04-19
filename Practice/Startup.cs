@@ -43,6 +43,12 @@ namespace Practice
                 options.Filters.Add(new AuthorizeFilter(policy));
             });
 
+            services.AddAuthorization(option =>
+            {
+                option.AddPolicy("DeleteRolePolicy",
+                    policy => policy.RequireClaim("Delete Role"));
+            });
+
             services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
         }
 
