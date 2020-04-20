@@ -45,6 +45,13 @@ namespace Practice
                 options.Filters.Add(new AuthorizeFilter(policy));
             });
 
+            services.AddAuthentication()
+                .AddGoogle(options =>
+                {
+                    options.ClientId = "667588955844-8cg5f3b5o5ts34jgdnfb51n0udesl9c7.apps.googleusercontent.com";
+                    options.ClientSecret = "N0pZGDimTIQltC7M4S2LiuHO";
+                });
+
             services.ConfigureApplicationCookie(option =>
             {
                 option.AccessDeniedPath = new PathString("/Administration/AccessDenied");
