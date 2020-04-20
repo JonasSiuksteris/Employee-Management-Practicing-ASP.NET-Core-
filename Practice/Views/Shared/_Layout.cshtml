@@ -46,7 +46,7 @@
                     <li class="nav-item">
                         <a asp-action="Create" asp-controller="Home" class="nav-link">Create</a>
                     </li>
-                    @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                    @if (SignInManager.IsSignedIn(User) && (User.IsInRole("Admin") ||  User.IsInRole("Super Admin")))
                     {
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink"

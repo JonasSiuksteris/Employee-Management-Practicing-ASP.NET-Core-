@@ -13,7 +13,7 @@ using Practice.ViewModels;
 
 namespace Practice.Controllers
 {
-    [Authorize(Policy = "AdminRolePolicy")]
+    //[Authorize(Policy = "AdminRolePolicy")]
     public class AdministrationController : Controller
     {
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -54,7 +54,7 @@ namespace Practice.Controllers
                     ClaimType = claim.Type
                 };
 
-                if (existingUserClaims.Any(c => c.Type == claim.Type))
+                if (existingUserClaims.Any(c => c.Type == claim.Type && c.Value == "true"))
                 {
                     userClaim.IsSelected = true;
                 }
@@ -86,7 +86,7 @@ namespace Practice.Controllers
             }
 
             result = await _userManager.AddClaimsAsync(user,
-                model.Claims.Where(x => x.IsSelected).Select(x => new Claim(x.ClaimType, x.ClaimType)));
+                model.Claims.Select(x => new Claim(x.ClaimType, x.IsSelected ? "true" : "false")));
 
             if (!result.Succeeded)
             {
@@ -143,6 +143,7 @@ namespace Practice.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "EditRolePolicy")]
         public async Task<IActionResult> ManageUserRoles(string userId)
         {
             ViewBag.userId = userId;
@@ -180,6 +181,7 @@ namespace Practice.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "EditRolePolicy")]
         public async Task<IActionResult> ManageUserRoles(List<UserRolesViewModel> model, string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -268,7 +270,7 @@ namespace Practice.Controllers
                 Email = user.Email,
                 UserName = user.UserName,
                 City = user.City,
-                Claims = userClaims.Select(c => c.Value).ToList(),
+                Claims = userClaims.Select(c => c.Type + " : " +c.Value).ToList(),
                 Roles = userRoles
             };
 
@@ -349,7 +351,6 @@ namespace Practice.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "EditRolePolicy")]
         public async Task<IActionResult> EditRole(string id)
         {
             var role = await _roleManager.FindByIdAsync(id);
@@ -378,7 +379,6 @@ namespace Practice.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = "EditRolePolicy")]
         public async Task<IActionResult> EditRole(EditRoleViewModel model)
         {
             var role = await _roleManager.FindByIdAsync(model.Id);

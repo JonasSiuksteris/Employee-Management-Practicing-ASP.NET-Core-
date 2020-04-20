@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Practice.Models;
+using Practice.Security;
 
 namespace Practice
 {
@@ -49,19 +50,25 @@ namespace Practice
                 option.AccessDeniedPath = new PathString("/Administration/AccessDenied");
             });
 
-        services.AddAuthorization(option =>
+            services.AddHttpContextAccessor();
+
+            services.AddAuthorization(option =>
             {
                 option.AddPolicy("DeleteRolePolicy",
-                    policy => policy.RequireClaim("Delete Role"));
+                    policy => policy.RequireClaim("Delete Role", "true"));
 
                 option.AddPolicy("EditRolePolicy",
-                    policy => policy.RequireClaim("Edit Role"));
+                    policy => policy.AddRequirements(new ManageAdminRolesAndClaimsRequirement())
+                    );
 
                 option.AddPolicy("AdminRolePolicy",
                     policy => policy.RequireRole("Admin"));
             });
 
             services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
+
+            services.AddSingleton<IAuthorizationHandler, CanEditOnlyOtherAdminRolesAndClaimsHandler>();
+            services.AddSingleton<IAuthorizationHandler, SuperAdminHandler>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
