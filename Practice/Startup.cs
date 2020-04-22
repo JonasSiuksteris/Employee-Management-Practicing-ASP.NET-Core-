@@ -50,6 +50,11 @@ namespace Practice
                 {
                     options.ClientId = "667588955844-8cg5f3b5o5ts34jgdnfb51n0udesl9c7.apps.googleusercontent.com";
                     options.ClientSecret = "N0pZGDimTIQltC7M4S2LiuHO";
+                })
+                .AddFacebook(options =>
+                {
+                    options.ClientId = "587153555234274";
+                    options.ClientSecret = "2592b2e0cedfa9dfe705c1968b9a996f";
                 });
 
             services.ConfigureApplicationCookie(option =>
