@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Practice.Models;
 using Practice.ViewModels;
 
@@ -13,12 +14,15 @@ namespace Practice.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -65,13 +69,22 @@ namespace Practice.Controllers
 
                 if (result.Succeeded)
                 {
+                    var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                    var confirmationLink = Url.Action("ConfirmEmail", "Account", new {userId = user.Id, token},
+                        Request.Scheme);
+
+                    _logger.Log(LogLevel.Error, confirmationLink);
+
                     if (_signInManager.IsSignedIn(User) && User.IsInRole("Admin"))
                     {
                         return RedirectToAction("ListUsers", "Administration");
                     }
 
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("index", "home");
+                    ViewBag.ErrorTitle = "Registration successful";
+                    ViewBag.ErrorMessage = "Before you can Login, please confirm your Email";
+                    return View("Error");
+
                 }
 
                 foreach (var error in result.Errors)
@@ -81,6 +94,34 @@ namespace Practice.Controllers
             }
 
             return View(model);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            if (userId == null || token == null)
+            {
+                RedirectToAction("Index", "Home");
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                ViewBag.ErrorMessage = $"The user ID {userId} is invalid";
+                return View("NotFound");
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+
+            if (result.Succeeded)
+            {
+                return View();
+            }
+
+            ViewBag.ErrorTitle = "Email cannot be confirmed";
+            return View("Error");
         }
 
         [HttpGet]
@@ -101,8 +142,18 @@ namespace Practice.Controllers
 
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl)
         {
+            model.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
             if (ModelState.IsValid)
             {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+
+                if (user != null && !user.EmailConfirmed && 
+                    (await _userManager.CheckPasswordAsync(user, model.Password)))
+                {
+                    ModelState.AddModelError(string.Empty, "Email not confirmed yet");
+                    return View(model);
+                }
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password,
                     model.RememberMe, lockoutOnFailure:false);
 
@@ -159,6 +210,21 @@ namespace Practice.Controllers
                 return View("Login", loginViewModel);
             }
 
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+
+            ApplicationUser user = null;
+
+            if (email != null)
+            {
+                user = await _userManager.FindByEmailAsync(email);
+
+                if (user != null && !user.EmailConfirmed)
+                {
+                    ModelState.AddModelError(string.Empty, "Email not confirmed yet");
+                    return View("Login", loginViewModel);
+                }
+            }
+
             var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider,
                 info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
 
@@ -168,12 +234,9 @@ namespace Practice.Controllers
             }
             else
             {
-                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
 
                 if (email != null)
                 {
-                    var user = await _userManager.FindByEmailAsync(email);
-
                     if (user == null)
                     {
                         user = new ApplicationUser
